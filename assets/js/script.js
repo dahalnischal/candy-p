@@ -1,77 +1,137 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const categoryContainer = document.getElementById("categoryContainer");
-  const companyContainer = document.getElementById("companyContainer");
-  const productContainer = document.getElementById("productContainer");
+  // Desktop Filters and Pagination
+  (function desktopFiltersAndPagination() {
+    const categoryContainer = document.getElementById("categoryContainer");
+    const companyContainer = document.getElementById("companyContainer");
+    const productContainer = document.getElementById("productContainer");
+    const pagination = document.querySelector(".desktop-pagination");
 
-  let selectedCategories = new Set();
-  let selectedCompany = null;
+    let selectedCategories = new Set();
+    let selectedCompany = null;
 
-  // Function to update product visibility based on filters
-  const filterProducts = () => {
-    const products = productContainer.querySelectorAll(".items-wrap");
-    products.forEach((product) => {
-      const productCategory = product.getAttribute("data-category").split(",");
-      const productCompany = product.getAttribute("data-company");
+    const itemsPerPage = 20;
+    let currentPage = 1;
 
-      const matchesCategory =
-        selectedCategories.size === 0 ||
-        [...selectedCategories].some((category) =>
-          productCategory.includes(category)
-        );
-      const matchesCompany = selectedCompany
-        ? productCompany === selectedCompany
-        : true;
+    const resetPagination = () => {
+      currentPage = 1;
+      pagination.querySelectorAll(".num").forEach((pageLink, index) => {
+        if (index === 0) {
+          pageLink.classList.add("active");
+        } else {
+          pageLink.classList.remove("active");
+        }
+      });
+    };
 
-      if (matchesCategory && matchesCompany) {
-        product.style.display = "block";
+    const filterProducts = () => {
+      const products = productContainer.querySelectorAll(".items-wrap");
+      let visibleCount = 0;
+
+      products.forEach((product) => {
+        const productCategory = product
+          .getAttribute("data-category")
+          ?.split(",");
+        const productCompany = product.getAttribute("data-company");
+
+        const matchesCategory =
+          selectedCategories.size === 0 ||
+          [...selectedCategories].some((category) =>
+            productCategory?.includes(category)
+          );
+
+        const matchesCompany = selectedCompany
+          ? productCompany === selectedCompany
+          : true;
+
+        if (matchesCategory && matchesCompany) {
+          visibleCount++;
+          product.style.display = "block";
+        } else {
+          product.style.display = "none";
+        }
+      });
+
+      if (visibleCount <= itemsPerPage) {
+        pagination.style.display = "none";
       } else {
-        product.style.display = "none";
+        pagination.style.display = "flex";
+        paginateProducts();
+      }
+
+      resetPagination();
+    };
+
+    const paginateProducts = () => {
+      const products = productContainer.querySelectorAll(".items-wrap");
+      let visibleCount = 0;
+
+      products.forEach((product, index) => {
+        if (product.style.display === "block") {
+          visibleCount++;
+          const start = (currentPage - 1) * itemsPerPage;
+          const end = currentPage * itemsPerPage;
+          product.style.display =
+            visibleCount > start && visibleCount <= end ? "block" : "none";
+        }
+      });
+    };
+
+    categoryContainer.addEventListener("click", (e) => {
+      const target = e.target.closest("li");
+      if (target && target.hasAttribute("data-category")) {
+        const category = target.getAttribute("data-category");
+
+        if (target.classList.contains("active")) {
+          target.classList.remove("active");
+          selectedCategories.delete(category);
+        } else {
+          target.classList.add("active");
+          selectedCategories.add(category);
+        }
+
+        filterProducts();
       }
     });
-  };
 
-  // Add click event listener to categories (multi-select)
-  categoryContainer.addEventListener("click", (e) => {
-    const target = e.target.closest("li");
-    if (target) {
-      const category = target.getAttribute("data-category");
-      if (target.classList.contains("active")) {
-        // Remove from selectedCategories if already active
-        target.classList.remove("active");
-        selectedCategories.delete(category);
-      } else {
-        // Add to selectedCategories
-        target.classList.add("active");
-        selectedCategories.add(category);
-      }
-      filterProducts();
-    }
-  });
+    companyContainer.addEventListener("click", (e) => {
+      const target = e.target.closest(".logos");
+      if (target && target.hasAttribute("data-company")) {
+        const company = target.getAttribute("data-company");
 
-  // Add click event listener to companies (single-select)
-  companyContainer.addEventListener("click", (e) => {
-    const target = e.target.closest(".logos");
-    if (target) {
-      const company = target.getAttribute("data-company");
-      if (target.classList.contains("active")) {
-        // Deactivate the selected company
-        target.classList.remove("active");
-        selectedCompany = null;
-      } else {
-        // Activate the clicked company and deactivate others
-        companyContainer
-          .querySelectorAll(".logos")
-          .forEach((companyElement) => {
-            companyElement.classList.remove("active");
-          });
-        target.classList.add("active");
-        selectedCompany = company;
+        if (target.classList.contains("active")) {
+          target.classList.remove("active");
+          selectedCompany = null;
+        } else {
+          companyContainer
+            .querySelectorAll(".logos")
+            .forEach((companyElement) => {
+              companyElement.classList.remove("active");
+            });
+
+          target.classList.add("active");
+          selectedCompany = company;
+        }
+
+        filterProducts();
       }
-      filterProducts();
-    }
-  });
+    });
+
+    pagination.addEventListener("click", (e) => {
+      const target = e.target.closest(".num");
+      if (target && !target.classList.contains("active")) {
+        pagination
+          .querySelectorAll(".num")
+          .forEach((pageLink) => pageLink.classList.remove("active"));
+
+        target.classList.add("active");
+        currentPage = parseInt(target.textContent, 10);
+        paginateProducts();
+      }
+    });
+
+    filterProducts();
+  })();
 });
-
 document.addEventListener("DOMContentLoaded", function () {
   const mobileCategoryContainer = document.getElementById(
     "mobileCategoryContainer"
@@ -82,64 +142,99 @@ document.addEventListener("DOMContentLoaded", function () {
   const mobileProductContainer = document.getElementById(
     "mobileProductContainer"
   );
+  const mobilePaginationContainer =
+    document.querySelector(".mobile-pagination");
 
   let selectedMobileCategories = new Set();
   let selectedMobileCompany = null;
 
-  // Function to update product visibility based on selected filters
-  const filterMobileProducts = () => {
-    const products = mobileProductContainer.querySelectorAll(".items-wrap");
-    products.forEach((product) => {
+  const itemsPerPage = 20; // Number of items per page
+  let currentPage = 1;
+
+  // Function to update product visibility based on selected filters and pagination
+  const filterAndPaginateMobileProducts = () => {
+    const products = Array.from(
+      mobileProductContainer.querySelectorAll(".items-wrap")
+    );
+    const filteredProducts = products.filter((product) => {
       const productCategories = product
         .getAttribute("data-category")
         .split(",");
       const productCompany = product.getAttribute("data-company");
 
-      // Check if the product matches the selected categories and company
       const matchesCategory =
         selectedMobileCategories.size === 0 ||
         [...selectedMobileCategories].some((category) =>
           productCategories.includes(category)
         );
+
       const matchesCompany = selectedMobileCompany
         ? productCompany === selectedMobileCompany
         : true;
 
-      // Show or hide the product based on the filter criteria
-      if (matchesCategory && matchesCompany) {
-        product.style.display = "block";
-      } else {
-        product.style.display = "none";
-      }
+      return matchesCategory && matchesCompany;
     });
+
+    // Paginate the filtered products
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = currentPage * itemsPerPage;
+
+    // Hide all products and show only paginated filtered products
+    products.forEach((product) => (product.style.display = "none"));
+    filteredProducts.slice(start, end).forEach((product) => {
+      product.style.display = "block";
+    });
+
+    // Update pagination
+    updateMobilePagination(totalPages);
   };
 
-  // Toggle category selection and add/remove category from the selected list
+  // Function to update pagination
+  const updateMobilePagination = (totalPages) => {
+    mobilePaginationContainer.innerHTML = ""; // Clear existing pagination
+
+    if (totalPages > 1) {
+      for (let i = 1; i <= totalPages; i++) {
+        const pageLink = document.createElement("a");
+        pageLink.classList.add("num");
+        pageLink.textContent = i;
+        if (i === currentPage) {
+          pageLink.classList.add("active");
+        }
+        pageLink.href = "#";
+        pageLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          currentPage = i;
+          filterAndPaginateMobileProducts();
+        });
+
+        mobilePaginationContainer.appendChild(pageLink);
+      }
+    }
+  };
+
+  // Toggle category selection
   window.toggleCheckbox = (event, checkboxId, category) => {
     const checkbox = document.getElementById(checkboxId);
-    const li = event.target.closest("li"); // Get the closest <li> element
+    const li = event.target.closest("li");
     checkbox.checked = !checkbox.checked;
 
-    // Add or remove the category from the selected categories
     if (checkbox.checked) {
       selectedMobileCategories.add(category);
-      li.classList.add("active"); // Add active class to the clicked <li>
+      li.classList.add("active");
     } else {
       selectedMobileCategories.delete(category);
-      li.classList.remove("active"); // Remove active class from the clicked <li>
+      li.classList.remove("active");
     }
 
-    // Update the filtered categories display
     updateFilteredCategories();
-
-    // Filter products after selecting/deselecting a category
-    filterMobileProducts();
-
-    // Update the active state of logos based on selected categories
+    currentPage = 1; // Reset to the first page
+    filterAndPaginateMobileProducts();
     updateLogoActiveState();
   };
 
-  // Update the list of filtered categories to show the selected ones
+  // Update filtered categories display
   const updateFilteredCategories = () => {
     const filteredCategoryContainer = document.getElementById(
       "mobileFilteredCategory"
@@ -154,13 +249,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   };
 
-  // Update the active class of logos based on selected categories
+  // Update active class of logos
   const updateLogoActiveState = () => {
-    // Logic to determine which logo(s) to mark as active
     if (selectedMobileCategories.size > 0) {
-      // If any category is selected, mark corresponding logo as active
       mobileCompanyContainer.querySelectorAll(".logos").forEach((logo) => {
-        const logoCategory = logo.getAttribute("data-category"); // Assuming logo has data-category attribute
+        const logoCategory = logo.getAttribute("data-category");
         if (selectedMobileCategories.has(logoCategory)) {
           logo.classList.add("active");
         } else {
@@ -168,37 +261,115 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
     } else {
-      // Reset all logos if no category is selected
       mobileCompanyContainer.querySelectorAll(".logos").forEach((logo) => {
         logo.classList.remove("active");
       });
     }
   };
 
-  // Add click event listener to companies (single-select for companies)
+  // Handle company selection
   mobileCompanyContainer.addEventListener("click", (e) => {
     const target = e.target.closest(".logos");
     if (target) {
       const company = target.getAttribute("data-company");
 
-      // Toggle the active class for the clicked logo
       if (target.classList.contains("active")) {
         target.classList.remove("active");
         selectedMobileCompany = null;
       } else {
         mobileCompanyContainer
           .querySelectorAll(".logos")
-          .forEach((companyElement) => {
-            companyElement.classList.remove("active"); // Remove active from all logos
-          });
-        target.classList.add("active"); // Add active class to clicked logo
+          .forEach((companyElement) =>
+            companyElement.classList.remove("active")
+          );
+        target.classList.add("active");
         selectedMobileCompany = company;
       }
 
-      // Filter the products after company selection
-      filterMobileProducts();
+      currentPage = 1; // Reset to the first page
+      filterAndPaginateMobileProducts();
     }
   });
+
+  // Initial call to filter and paginate products
+  filterAndPaginateMobileProducts();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const itemsPerPage = 20; // Number of items per page
+
+  // Function to handle pagination for a given container
+  const setupPagination = (containerId, paginationId) => {
+    const productContainer = document.getElementById(containerId);
+    const paginationContainer = document.querySelector(`.${paginationId}`);
+    const items = Array.from(productContainer.querySelectorAll(".items-wrap"));
+    const totalPages = Math.ceil(items.length / itemsPerPage);
+
+    const showPage = (page) => {
+      // Hide all items
+      items.forEach((item) => (item.style.display = "none"));
+
+      // Calculate start and end index for items to display
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+
+      // Show items for the current page
+      items.slice(startIndex, endIndex).forEach((item) => {
+        item.style.display = "block";
+      });
+
+      // Update active class in pagination
+      paginationContainer.querySelectorAll(".num").forEach((link, index) => {
+        link.classList.toggle("active", index + 1 === page);
+      });
+    };
+
+    const createPagination = () => {
+      paginationContainer.innerHTML = ""; // Clear existing pagination
+
+      // Add page numbers
+      for (let i = 1; i <= totalPages; i++) {
+        const pageLink = document.createElement("a");
+        pageLink.classList.add("num");
+        pageLink.textContent = i;
+        pageLink.href = "#";
+        if (i === 1) pageLink.classList.add("active"); // Set initial active page
+
+        // Add click event to switch pages
+        pageLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          showPage(i);
+        });
+
+        paginationContainer.appendChild(pageLink);
+      }
+
+      // Add "Further" button if needed
+      if (totalPages > 1) {
+        const furtherLink = document.createElement("a");
+        furtherLink.classList.add("further");
+        furtherLink.textContent = "дальше";
+        furtherLink.href = "#";
+
+        furtherLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          const activePage = paginationContainer.querySelector(".num.active");
+          const currentPage = parseInt(activePage.textContent);
+          if (currentPage < totalPages) showPage(currentPage + 1);
+        });
+
+        paginationContainer.appendChild(furtherLink);
+      }
+    };
+
+    // Initialize pagination and show the first page
+    createPagination();
+    showPage(1);
+  };
+
+  // Setup pagination for desktop and mobile
+  setupPagination("productContainer", "desktop-pagination");
+  setupPagination("mobileProductContainer", "mobile-pagination");
 });
 
 // Select the go-up button

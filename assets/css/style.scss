@@ -1265,7 +1265,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  .pagination {
+  .desktop-pagination,
+  .mobile-pagination {
     max-width: 250px;
     display: flex;
     flex-wrap: wrap;

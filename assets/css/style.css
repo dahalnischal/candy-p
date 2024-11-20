@@ -894,6 +894,7 @@ body {
 }
 
 .contact-card {
+  position: relative;
   background: #ffffff;
   padding: 37px 55px 58px 55px;
   border-radius: 40px;
@@ -1190,14 +1191,16 @@ body {
   align-items: center;
   justify-content: center;
 }
-.page-head .pagination {
+.page-head .desktop-pagination,
+.page-head .mobile-pagination {
   max-width: 250px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
 }
-.page-head .pagination .num {
+.page-head .desktop-pagination .num,
+.page-head .mobile-pagination .num {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1212,15 +1215,18 @@ body {
   border-radius: 10px;
   transition: all 0.5s ease-in-out;
 }
-.page-head .pagination .num.active {
+.page-head .desktop-pagination .num.active,
+.page-head .mobile-pagination .num.active {
   background: rgba(209, 234, 229, 0.5019607843);
   transition: all 0.5s ease-in-out;
 }
-.page-head .pagination .num:hover {
+.page-head .desktop-pagination .num:hover,
+.page-head .mobile-pagination .num:hover {
   background: rgba(209, 234, 229, 0.5019607843);
   transition: all 0.5s ease-in-out;
 }
-.page-head .pagination .further {
+.page-head .desktop-pagination .further,
+.page-head .mobile-pagination .further {
   font-family: "Lato";
   font-size: 18px;
   font-weight: 400;
